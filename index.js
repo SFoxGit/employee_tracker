@@ -11,7 +11,7 @@ const connection = mysql.createConnection({
   password: '',
   database: 'employeeDB',
 });
-
+// move to bottom of page before finishing
 connection.connect((err) => {
   if (err) throw err;
   console.log(`connected as id ${connection.threadId}\n`);
@@ -72,6 +72,7 @@ const initQuestions = [
   // },
 ]
 
+// initial function called after connection, returns all questions then delegates other functions
 const init = () => {
   inquirer
     prompt(initQuestions)
@@ -93,9 +94,50 @@ const init = () => {
     .catch(err => {
       console.log(err);
     })
+};
+
+
+// secondary functions, called from init
+const addEmployee = (answers) => {
+  const query = connection.query(
+    ''
 }
-
-
+const addRole = (answers) => {
+  
+}
+const addDepartment = (answers) => {
+  
+}
+const viewEmployees = (answers) => {
+  
+}
+const viewRoles = (answers) => {
+  
+}
+const viewDepartments = (answers) => {
+  
+}
+const updateEmployeeRoles = (answers) => {
+  
+}
+const updateEmployeeManagers = (answers) => {
+  
+}
+const viewEmployeesbyManagers = (answers) => {
+  
+}
+const deleteEmployees = (answers) => {
+  
+}
+const deleteRoles = (answers) => {
+  
+}
+const deleteDepartments = (answers) => {
+  
+}
+const viewDepartmentBudget = (answers) => {
+  
+}
 
 
 
