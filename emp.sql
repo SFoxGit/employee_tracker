@@ -48,11 +48,11 @@ VALUES ("Accountant", "50000", 3);
 INSERT INTO employee (first_name, last_name, role_id)
 VALUES ("Shawn", "Fox", 1);
 INSERT INTO employee (first_name, last_name, role_id)
-VALUES ("Anthony", "Cooper", 2);
+VALUES ("Maxwell", "Allee", 2);
 INSERT INTO employee (first_name, last_name, role_id)
 VALUES ("Warren", "B", 3);
 INSERT INTO employee (first_name, last_name, role_id, manager_id)
-VALUES ("Max", "Allee", 5, 2);
+VALUES ("Tom", "Boydin", 5, 2);
 INSERT INTO employee (first_name, last_name, role_id, manager_id)
 VALUES ("Al", "Bundy", 4, 1);
 INSERT INTO employee (first_name, last_name, role_id, manager_id)

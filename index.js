@@ -23,7 +23,7 @@ const initQuestions = [
     type: "list",
     message: "What would you like to do?",
     name: "toDo",
-    choices: ['Add Employee', 'Add Role', 'Add Department', 'View Employees', 'View Roles', 'View Departments', 'Update Employee Roles', 'Update Employee Managers', 'View Employees by Managers', 'Delete Employees', 'Delete Roles', 'Delete Departments', 'View Department Budget', 'exit']
+    choices: ['Add Employee', 'Add Role', 'Add Department', 'View Employees', 'View Roles', 'View Departments', 'Update Employee Roles', 'exit']
   },
   // Add Employee Prompts
   {
@@ -75,12 +75,12 @@ const init = () => {
       if (answers.toDo === 'View Roles') { viewRoles(answers) }
       if (answers.toDo === 'View Departments') { viewDepartments(answers) }
       if (answers.toDo === 'Update Employee Roles') { updateEmployeeRoles(answers) }
-      if (answers.toDo === 'Update Employee Managers') { updateEmployeeManagers(answers) }
-      if (answers.toDo === 'View Employees by Managers') { viewEmployeesbyManagers(answers) }
-      if (answers.toDo === 'Delete Employees') { deleteEmployees(answers) }
-      if (answers.toDo === 'Delete Roles') { deleteRoles(answers) }
-      if (answers.toDo === 'Delete Departments') { deleteDepartments(answers) }
-      if (answers.toDo === 'View Department Budget') { viewDepartmentBudget(answers) }
+      // if (answers.toDo === 'Update Employee Managers') { updateEmployeeManagers(answers) }
+      // if (answers.toDo === 'View Employees by Managers') { viewEmployeesbyManagers(answers) }
+      // if (answers.toDo === 'Delete Employees') { deleteEmployees(answers) }
+      // if (answers.toDo === 'Delete Roles') { deleteRoles(answers) }
+      // if (answers.toDo === 'Delete Departments') { deleteDepartments(answers) }
+      // if (answers.toDo === 'View Department Budget') { viewDepartmentBudget(answers) }
       if (answers.toDo === 'exit') { connection.end() }
     })
     .catch(err => {
@@ -168,7 +168,6 @@ const addRole = (answers) => {
         ]
       )
       .then((second) => {
-        console.log((second))
         connection.query(
           'INSERT INTO role SET ?',
           {
@@ -198,10 +197,10 @@ const addDepartment = (answers) => {
       console.log('department added!');
     }
   )
-
+  init();
 }
 const viewEmployees = (answers) => {
-  let query = `SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name, role.salary, 
+  let query = `SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary, 
   CONCAT(manager.first_name, ' ', manager.last_name)
   AS manager
   FROM employee
@@ -211,7 +210,7 @@ const viewEmployees = (answers) => {
   ON role.department_id = department.id
   LEFT JOIN employee manager ON employee.manager_id = manager.id;`;
   connection.query(query, (err, res) => {
-    
+    console.log('---------------------------------------')
     console.table(res);
     init();
   }
@@ -220,6 +219,7 @@ const viewEmployees = (answers) => {
 const viewRoles = (answers) => {
   connection.query('SELECT title, salary, department.name FROM role INNER JOIN department on department.id = role.department_id', (err, res) => {
     if (err) throw err;
+    console.log('---------------------------------------')
     console.table(res);
   }
   )
@@ -228,28 +228,79 @@ const viewRoles = (answers) => {
 const viewDepartments = (answers) => {
   connection.query('SELECT * FROM department', (err, res) => {
     if (err) throw err;
+    console.log('---------------------------------------')
     console.table(res);
   })
   init();
 }
 const updateEmployeeRoles = (answers) => {
-
+  connection.query('SELECT * FROM employee', (err, res) => {
+    inquirer
+      .prompt(
+        [
+          {
+            type: "list",
+            message: "Which employee would you like to edit?",
+            name: "empEdit",
+            choices:
+              res.map((empMan) => {
+                return { name: `${empMan.first_name} ${empMan.last_name}`, value: empMan.id }
+              })
+          }
+        ]
+      )
+      .then((empSelect) => {
+        upRole(empSelect);
+      });
+  });
+  const upRole = (empSelect) => {
+    connection.query('SELECT * FROM role', (err, res) => {
+      inquirer
+        .prompt(
+          {
+            type: "list",
+            message: "What is the employee's new role?",
+            name: "role",
+            choices:
+              res.map((empRole) => {
+                return { name: empRole.title, value: empRole.id }
+              }),
+          },
+        )
+        .then((answer) => {
+          writeNewRole(answer, empSelect)
+        })
+    })
+  }
+  const writeNewRole = (answer, empSelect) => {
+    let newRole = Object.values(answer)[0]
+    let currentEmp = Object.values(empSelect)[0]
+    connection.query(`UPDATE employee SET role_id = ${newRole} WHERE employee.id = ${currentEmp}`,
+      (err, res) => {
+        if (err) throw err;
+        console.log('Employee added!');
+      }
+    )
+    init();
+  }
 }
-const updateEmployeeManagers = (answers) => {
+// const updateEmployeeManagers = (answers) => {
 
-}
-const viewEmployeesbyManagers = (answers) => {
+// }
+// const viewEmployeesbyManagers = (answers) => {
 
-}
-const deleteEmployees = (answers) => {
+// }
+// const deleteEmployees = (answers) => {
 
-}
-const deleteRoles = (answers) => {
+// }
+// const deleteRoles = (answers) => {
 
-}
-const deleteDepartments = (answers) => {
+// }
+// const deleteDepartments = (answers) => {
 
-}
-const viewDepartmentBudget = (answers) => {
+// }
+// const viewDepartmentBudget = (answers) => {
 
-};
+// };
+
+// bonus prompt 'Update Employee Managers', 'View Employees by Managers', 'Delete Employees', 'Delete Roles', 'Delete Departments', 'View Department Budget', 
