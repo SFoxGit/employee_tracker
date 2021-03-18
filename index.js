@@ -1,6 +1,6 @@
 const mysql = require('mysql');
 const inquirer = require('inquirer');
-require('console.table')
+require('console.table');
 
 var connection = mysql.createConnection({
   host: 'localhost',
@@ -17,33 +17,6 @@ connection.connect(err => {
 })
 
 
-// array functions for choices
-const roleArr = () => {
-  connection.query('SELECT * FROM role', (err, res) => {
-    if (err) throw err;
-    res.map((roleNames) => {
-      return { name: roleNames.title, value: roleNames.id }
-    })
-  })
-}
-const deptArr = () => {
-  connection.query('SELECT * FROM role', (err, res) => {
-    if (err) throw err;
-    res.map((deptNames) => {
-      return { name: deptNames.name, value: deptNames.id }
-    })
-  })
-}
-const managerArr = () => {
-  connection.query('SELECT * FROM employee', (err, res) => {
-    if (err) throw err;
-    res.map((managerNames) => {
-      if (managerNames.manager_id == null) {
-        return { name: managerNames.first_name, value: managerNames.id }
-      }
-    })
-  })
-}
 
 const initQuestions = [
   {
@@ -65,20 +38,8 @@ const initQuestions = [
     name: "last",
     when: (answers) => answers.toDo === 'Add Employee'
   },
-  {
-    type: "list",
-    message: "What is the employee's role?",
-    name: "role",
-    choices: roleArr(),
-    when: (answers) => answers.toDo === 'Add Employee'
-  },
-  {
-    type: "list",
-    message: "Who is the employee's manager?",
-    name: "manager",
-    choices: managerArr(),
-    when: (answers) => answers.toDo === 'Add Employee'
-  },
+
+
   // Add department Prompt
   {
     type: "input",
@@ -99,20 +60,7 @@ const initQuestions = [
     name: "salary",
     when: (answers) => answers.toDo === 'Add Role'
   },
-  {
-    type: "input",
-    message: "What is the department of the new role?",
-    name: "roleDept",
-    choices: deptArr(),
-    when: (answers) => answers.toDo === 'Add Role'
-  }
-  // {
-  //   type: "",
-  //   message: "",
-  //   name: "",
-  //   choices: [],
-  //   when: (answers) => answers.toDo === 
-  // },
+
 ]
 
 // initial function called after connection, returns all questions then delegates other functions
@@ -144,33 +92,99 @@ const init = () => {
 
 // secondary functions, called from init
 const addEmployee = (answers) => {
-  connection.query(
-    'INSERT INTO employee SET ?',
-    {
-      first_name: answers.name,
-      last_name: answers.last,
-      role_id: answers.role,
-      manager_id: answers.manager,
-    },
-    (err, res) => {
-      if (err) throw err;
-      console.log('Employee added!');
-    }
-  )
+  connection.query('SELECT * FROM role', (err, res) => {
+    inquirer
+      .prompt(
+        {
+          type: "list",
+          message: "What is the employee's role?",
+          name: "role",
+          choices:
+            res.map((empRole) => {
+              return { name: empRole.title, value: empRole.id }
+            }),
+        },
+      )
+      .then((answer) => {
+        managerArr(answer)
+      })
+  })
+  const managerArr = (answer) => {
+    connection.query('SELECT * FROM employee', (err, res) => {
+      inquirer
+        .prompt(
+          [
+            {
+              type: "list",
+              message: "Who is the employee's manager?",
+              name: "manager",
+              choices:
+                res.map((empMan) => {
+                  return { name: `${empMan.first_name} ${empMan.last_name}`, value: empMan.id }
+                })
+            }
+          ]
+        )
+        .then((manSelect) => {
+          writeEmp(answer, manSelect);
+        });
+    });
+  }
+  const writeEmp = (answer, manSelect) => {
+    connection.query(
+      'INSERT INTO employee SET ?',
+      {
+        first_name: answers.name,
+        last_name: answers.last,
+        role_id: Object.values(answer)[0],
+        manager_id: Object.values(manSelect)[0],
+      },
+      (err, res) => {
+        if (err) throw err;
+        console.log('Employee added!');
+      }
+    )
+    init();
+  }
 }
+
+
 const addRole = (answers) => {
-  connection.query(
-    'INSERT INTO role SET ?',
-    {
-      title: answers.roleName,
-      salary: answers.salary,
-      department_id: answers.roleDept,
-    },
-    (err, res) => {
-      if (err) throw err;
-      console.log('role added!');
-    }
-  )
+  connection.query('SELECT * FROM department', (err, res) => {
+    inquirer
+      .prompt(
+        [
+          {
+            type: "list",
+            message: "What is the department of the new role?",
+            name: "roleDept",
+            choices:
+              res.map((deptNames) => {
+                return { name: deptNames.name, value: deptNames.id }
+              })
+
+
+          }
+        ]
+      )
+      .then((second) => {
+        console.log((second))
+        connection.query(
+          'INSERT INTO role SET ?',
+          {
+            title: answers.roleName,
+            salary: answers.salary,
+            department_id: Object.values(second)[0],
+          },
+          (err, res) => {
+            if (err) throw err;
+            console.log('role added!');
+          }
+        )
+        init();
+
+      });
+  });
 
 }
 const addDepartment = (answers) => {
@@ -187,15 +201,24 @@ const addDepartment = (answers) => {
 
 }
 const viewEmployees = (answers) => {
-  connection.query('SELECT * FROM employee', (err, res) => {
-    if (err) throw err;
+  let query = `SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name, role.salary, 
+  CONCAT(manager.first_name, ' ', manager.last_name)
+  AS manager
+  FROM employee
+  INNER JOIN role
+  ON role.id = employee.role_id
+  INNER JOIN department
+  ON role.department_id = department.id
+  LEFT JOIN employee manager ON employee.manager_id = manager.id;`;
+  connection.query(query, (err, res) => {
+    
     console.table(res);
+    init();
   }
   )
-  init();
 }
 const viewRoles = (answers) => {
-  connection.query('SELECT * FROM role', (err, res) => {
+  connection.query('SELECT title, salary, department.name FROM role INNER JOIN department on department.id = role.department_id', (err, res) => {
     if (err) throw err;
     console.table(res);
   }
@@ -206,8 +229,7 @@ const viewDepartments = (answers) => {
   connection.query('SELECT * FROM department', (err, res) => {
     if (err) throw err;
     console.table(res);
-  }
-  )
+  })
   init();
 }
 const updateEmployeeRoles = (answers) => {
