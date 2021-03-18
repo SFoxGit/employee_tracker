@@ -15,6 +15,8 @@ Shawn Fox
 ## Project Links:
   
 - Deployed site: Not Deployed - Node application
+
+- Link to video demo: [Google Drive](https://drive.google.com/file/d/1-NKI3OxIf3WTRtijNg8kD5EgdAYJ0_8L/view?usp=sharing)
   
 - GitHub: [sfoxgit](https://github.com/sfoxgit/employee_tracker)
   
